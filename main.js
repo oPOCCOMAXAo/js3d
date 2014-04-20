@@ -35,14 +35,32 @@ function main() {
 }
 function touchStart(e){
 	var t = e.touches[0];
+	document.ontouchmove = touchMove;
 	zx = t.clientX;
 	zy = t.clientY;
 	return false;
 }
-function touchEnd(e){
+function touchMove(e){
 	var t = e.touches[0];
-	var dir = getDirection(t.clientX - zx, t.clientY - zy);
-	doAction(dir);
+	var x = t.clientX;
+	var y = t.clientY;
+	var dir = {x: 0, y: 0};
+	var q = {x: x - zx, y: y - zy};
+	dir.x = q.x / Math.abs(q.x);
+	dir.y = q.y / Math.abs(q.y);
+	for(var i = 0; i <= q.x; i++)
+		if(dir.x == -1) leftClick();
+		else rightClick();
+	for(var i = 0; i <= q.y; i++)
+		if(dir.y == -1) upClick();
+		else downClick();	
+	printPoly();
+	zx = x;
+	zy = y;
+	return false;
+}
+function touchEnd(e){
+	document.ontouchmove = null;
 	return false;
 }
 function keyPress(e){
