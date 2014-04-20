@@ -30,7 +30,7 @@ function main() {
 	document.onmouseup = mouseUp;	
 	context.strokeStyle = '#ffa';
 	context.fillStyle = '#ff5';
-	for(var i = 0; i < 10000; i++)addpt();
+	for(var i = 0; i < 4000; i++)addpt();
 	printPoly();
 	setInterval(auto, 40);
 }
