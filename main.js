@@ -1,14 +1,7 @@
-var context, zx, zy,
-	h = window.innerHeight, 
-	w = window.innerWidth;
-var len = h > w ? w : h;
+var context, zx, zy, h = window.innerHeight, w = window.innerWidth, len = h > w ? w : h;
+var poly3d = [], poly2d = [], center2d = {x: w/2, y: h/2};
+var yscale = len/1.10;
 var dsin = Math.sin(Math.PI/100), dcos = Math.cos(Math.PI/100);
-var poly3d = [];
-var poly2d = [];
-var center2d = {x: w/2, y: h/2};
-var yscale = len/2;
-		
-	//try{}catch(e){document.write(e);}
 function main() {
 	var div = document.createElement('canvas');
 	div.height = h;
@@ -27,7 +20,7 @@ function main() {
 	document.onmouseup = mouseUp;	
 	context.strokeStyle = '#ffa';
 	context.fillStyle = '#ff5';
-	for(var i = 0; i < 8; i++)addpt();
+	for(var i = 0; i < 200; i++)addpt();
 	printPoly();
 	setInterval(auto, 40);
 }
@@ -108,10 +101,11 @@ function doAction(act){
 function printPoly() {
 	full3dto2d();
 	var l = poly3d.length;
+	var t = Math.ceil(l/100);
 	context.clearRect(0, 0, w, h);
 	context.beginPath();
 	for(var i = 0; i < l - 1; i++)
-		for(var j = i; j < l; j++){
+		for(var j = i + 1; j < l; j += t){
 			context.moveTo(poly2d[i].x, poly2d[i].y);
 			context.lineTo(poly2d[j].x, poly2d[j].y);
 		}
@@ -188,13 +182,9 @@ function move(dx, dy){
 		else {upClick();}	}
 }
 function rotate(x, y, dir){
-	//return {x: y*dcos + dir*x*dsin, y: x*dcos- dir*y*dsin};
-	var r = Math.sqrt(x*x+y*y);
-	var sina = y/r;
-	var cosa = x/r;
-	var sinad = y/r*dcos + dir*x/r*dsin;
-	var cosad = x/r*dcos - dir*y/r*dsin;
-	return {x: r*cosad, y: r*sinad};//*/
+	var y1 = y*dcos + dir*x*dsin;
+	var x1 = x*dcos - dir*y*dsin;
+	return {x: x1, y: y1};
 }
 function addpt(){
 	var l = poly3d.length;
