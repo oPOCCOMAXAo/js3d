@@ -1,21 +1,19 @@
-var context, zx, zy, color, 
+var context, zx, zy,
 	h = window.innerHeight, 
 	w = window.innerWidth;
 var len = h > w ? w : h;
-var grid = [];
-var field = [];
 var dsin = Math.sin(Math.PI/100), dcos = Math.cos(Math.PI/100);
-var poly = [];
+var poly3d = [];
+var poly2d = [];
 var center2d = {x: w/2, y: h/2};
-var visualcenter = {x: len/4, y: len/4, z: len/4};
 var yscale = len/2;
-var visualcenter2d = {x: 0.5*yscale, y: 0.5*yscale};
 		
 	//try{}catch(e){document.write(e);}
 function main() {
 	var div = document.createElement('canvas');
 	div.height = h;
 	div.width = w;
+	document.body.innerHTML = '';
 	document.body.appendChild(div);
 	document.body.style.background = '#000';
 	div.style.position = 'absolute';
@@ -29,9 +27,9 @@ function main() {
 	document.onmouseup = mouseUp;	
 	context.strokeStyle = '#ffa';
 	context.fillStyle = '#ff5';
-	for(var i = 0; i < 3; i++)addpt();
+	for(var i = 0; i < 8; i++)addpt();
 	printPoly();
-	//setInterval(auto, 40);
+	setInterval(auto, 40);
 }
 function touchStart(e){
 	var t = e.touches[0];
@@ -44,16 +42,7 @@ function touchMove(e){
 	var t = e.touches[0];
 	var x = t.clientX;
 	var y = t.clientY;
-	var dir = {x: 0, y: 0};
-	var q = {x: x - zx, y: y - zy};
-	dir.x = q.x / Math.abs(q.x);
-	dir.y = q.y / Math.abs(q.y);
-	for(var i = 0; i <= q.x; i++)
-		if(dir.x == -1) leftClick();
-		else rightClick();
-	for(var i = 0; i <= q.y; i++)
-		if(dir.y == -1) upClick();
-		else downClick();	
+	move(x - zx, y - zy);
 	printPoly();
 	zx = x;
 	zy = y;
@@ -76,24 +65,15 @@ function keyPress(e){
 	return false;
 }
 function mouseDown(e){
-	document.onmousemove = mouseMove;
 	zx = e.clientX;
 	zy = e.clientY;
+	document.onmousemove = mouseMove;
 	return false;
 }
 function mouseMove(e){
 	var x = e.clientX;
 	var y = e.clientY;
-	var dir = {x: 0, y: 0};
-	var q = {x: x - zx, y: y - zy};
-	dir.x = q.x / Math.abs(q.x);
-	dir.y = q.y / Math.abs(q.y);
-	for(var i = 0; i <= q.x; i++)
-		if(dir.x == -1) leftClick();
-		else rightClick();
-	for(var i = 0; i <= q.y; i++)
-		if(dir.y == -1) upClick();
-		else downClick();	
+	move(x - zx, y - zy);
 	printPoly();
 	zx = x;
 	zy = y;
@@ -126,33 +106,26 @@ function doAction(act){
 	printPoly();
 }
 function printPoly() {
-	var l = poly.length;
-	var d = {};
+	full3dto2d();
+	var l = poly3d.length;
 	context.clearRect(0, 0, w, h);
 	context.beginPath();
-	d.x = poly[0].x;
-	d.y = poly[0].y;
-	d.z = poly[0].z;
-	d = transform3dto2d(d.x, d.y, d.z);
-	d.x += center2d.x;
-	d.y += center2d.y;
-	context.moveTo(d.x, d.y);
-	for(var i = 1; i < l; i++){
-		d.x = poly[i].x;
-		d.y = poly[i].y;
-		d.z = poly[i].z;
-		d = transform3dto2d(d.x, d.y, d.z);
-		d.x += center2d.x;
-		d.y += center2d.y;
-		context.lineTo(d.x, d.y);
-	}
+	for(var i = 0; i < l - 1; i++)
+		for(var j = i; j < l; j++){
+			context.moveTo(poly2d[i].x, poly2d[i].y);
+			context.lineTo(poly2d[j].x, poly2d[j].y);
+		}
 	context.closePath();
 	context.stroke();
-	context.fill();
 }
 function transform3dto2d(x, y, z){
 	y += len;
-	return {x: x/y * yscale, y: z/y * yscale};
+	return {x: x/y * yscale + center2d.x, y: z/y * yscale + center2d.y};
+}
+function full3dto2d(){
+	var l = poly3d.length;
+	for(var i = 0; i < l; i++)
+		poly2d[i] = transform3dto2d(poly3d[i].x, poly3d[i].y, poly3d[i].z);
 }
 function test(){
 	for(var a in CanvasRenderingContext2D){
@@ -161,39 +134,39 @@ function test(){
 }
 
 function downClick(){
-	var l = poly.length;
+	var l = poly3d.length;
 	var d = {y: 0, z: 0};
 	for(var i = 0; i < l; i++){
-		d = rotateyz(poly[i].y, poly[i].z, -1);
-		poly[i].y = d.y;
-		poly[i].z = d.z;
+		d = rotateyz(poly3d[i].y, poly3d[i].z, -1);
+		poly3d[i].y = d.y;
+		poly3d[i].z = d.z;
 	}
 }
 function leftClick(){
-	var l = poly.length;
+	var l = poly3d.length;
 	var d = {x: 0, y: 0};
 	for(var i = 0; i < l; i++){
-		d = rotatexy(poly[i].x, poly[i].y, -1);
-		poly[i].x = d.x;
-		poly[i].y = d.y;
+		d = rotatexy(poly3d[i].x, poly3d[i].y, -1);
+		poly3d[i].x = d.x;
+		poly3d[i].y = d.y;
 	}
 }
 function upClick(){
-	var l = poly.length;
+	var l = poly3d.length;
 	var d = {y: 0, z: 0};
 	for(var i = 0; i < l; i++){
-		d = rotateyz(poly[i].y, poly[i].z, 1);
-		poly[i].y = d.y;
-		poly[i].z = d.z;
+		d = rotateyz(poly3d[i].y, poly3d[i].z, 1);
+		poly3d[i].y = d.y;
+		poly3d[i].z = d.z;
 	}
 }
 function rightClick(){
-	var l = poly.length;
+	var l = poly3d.length;
 	var d = {x: 0, y: 0};
 	for(var i = 0; i < l; i++){
-		d = rotatexy(poly[i].x, poly[i].y, 1);
-		poly[i].x = d.x;
-		poly[i].y = d.y;
+		d = rotatexy(poly3d[i].x, poly3d[i].y, 1);
+		poly3d[i].x = d.x;
+		poly3d[i].y = d.y;
 	}
 }
 function rotatexy(x, y, dir){
@@ -203,24 +176,35 @@ function rotateyz(y, z, dir){
 	var t = rotate(y, z, dir);
 	return {y: t.x, z: t.y};
 }
+function move(dx, dy){
+	dx /= 2;
+	dy /= 2;
+	var dir = {x: dx / Math.abs(dx), y: dy / Math.abs(dy)};
+	for(var i = 0; i <= dx; i++){
+		if(dir.x == 1) {rightClick();}
+		else {leftClick();}}
+	for(var i = 0; i <= dy; i++){
+		if(dir.y == 1) {downClick();}
+		else {upClick();}	}
+}
 function rotate(x, y, dir){
-	//return {x: y*dcos+x*dsin, y: x*dcos-y*dsin};
+	//return {x: y*dcos + dir*x*dsin, y: x*dcos- dir*y*dsin};
 	var r = Math.sqrt(x*x+y*y);
 	var sina = y/r;
 	var cosa = x/r;
-	var sinad = sina*dcos+dir*cosa*dsin;
-	var cosad = cosa*dcos-dir*sina*dsin;
+	var sinad = y/r*dcos + dir*x/r*dsin;
+	var cosad = x/r*dcos - dir*y/r*dsin;
 	return {x: r*cosad, y: r*sinad};//*/
 }
 function addpt(){
-	var l = poly.length;
+	var l = poly3d.length;
 	var a = Math.random()*2*Math.PI;
 	var r = len/2;
 	var q = Math.random()*2*Math.PI;
-	poly[l] = {};
-	poly[l].x = Math.cos(a)*Math.sin(q)*r;
-	poly[l].y = Math.sin(a)*Math.sin(q)*r;
-	poly[l].z = Math.cos(q)*r;
+	poly3d[l] = {};
+	poly3d[l].x = Math.cos(a)*Math.sin(q)*r;
+	poly3d[l].y = Math.sin(a)*Math.sin(q)*r;
+	poly3d[l].z = Math.cos(q)*r;
 }
 function auto(){
 	leftClick();
