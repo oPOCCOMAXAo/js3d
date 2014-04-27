@@ -173,13 +173,18 @@ function rotateyz(y, z, dir){
 function move(dx, dy){
 	dx /= 2;
 	dy /= 2;
-	var dir = {x: dx / Math.abs(dx), y: dy / Math.abs(dy)};
-	for(var i = 0; i <= dx; i++){
-		if(dir.x == 1) {rightClick();}
-		else {leftClick();}}
-	for(var i = 0; i <= dy; i++){
-		if(dir.y == 1) {downClick();}
-		else {upClick();}	}
+	var dir = {
+		x: dx / Math.abs(dx), 
+		y: dy / Math.abs(dy)
+	};
+	if(dir.x == 1) 
+		for(var i = dx; i > 0; i--) rightClick();
+	else
+		for(var i = -dx; i > 0; i--) leftClick();
+	if(dir.y == 1)
+		for(var i = dy; i > 0; i--) downClick();
+	else
+		for(var i = -dy; i > 0; i--) upClick();
 }
 function rotate(x, y, dir){
 	var y1 = y*dcos + dir*x*dsin;
